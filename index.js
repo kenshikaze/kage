@@ -50,6 +50,72 @@ app.command("/kage-joke", async ({ ack, respond }) => {
   }
 });
 
+app.command("/kage-weather", async ({ ack, respond, command }) => {
+  await ack();
+  const city = command.text.trim();
+  if (!city) {
+    await respond({
+      text:"give me a city name ,bud like: ~kage-weather New York`"
+    });
+    return;
+  }
+
+  try {
+    // Find the city's coordinate
+    const locationResponse = await axios.get(
+      "https://geocoding-api.open_meteo.com/v1/search",
+      {
+        params: {
+          name: city,
+          count:1,
+          language: "en",
+          format: "json"
+        }
+      }
+    );
+    const location = locationResponse.data.results[0];
+
+    if (!location) {
+      await respond({
+        text: `i could not find "${city}". take another try,bud`
+      });
+      return;
+    }
+
+    // Get weather using the coordinates
+    const weatherResponse = await axios.get(
+      "https://api.open-meteo.com/v1/forecast",
+      {
+        params: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          current: "temperature_2m,relative_humidity_2m,wind_speed_10m",
+          timezone: "auto"
+        }
+      }
+    );
+
+    const weather = weatherResponse.data.current;
+
+    await respond({
+      text:
+        `🌦️ *Kage Weather Report*\n\n` +
+        `📍 ${location.name}, ${location.country}\n` +
+        `🌡️ Temperature: ${weather.temperature_2m}°C\n` +
+        `💧 Humidity: ${weather.relative_humidity_2m}%\n` +
+        `💨 Wind: ${weather.wind_speed_10m} km/h`
+    });
+
+  } catch (error) {
+    console.error("Weather API error:", error);
+
+    await respond({
+      text: "⚠️ Kage couldn't retrieve the weather right now."
+    });
+  }
+});
+
+
 (async () => {
   await app.start();
   console.log("bot is running!");
