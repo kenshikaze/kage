@@ -26,7 +26,8 @@ app.command("/kage-help", async ({ ack, respond }) => {
 `Available Commands:
 /kage-ping - Check bot latency
 /kage-time - Get the current time
-/kage-joke - Get a random joke`
+/kage-joke - Get a random joke
+/kage-weather - Get weather of the provided area`
   });
 });
 
